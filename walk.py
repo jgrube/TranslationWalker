@@ -3,6 +3,7 @@ import chardet
 import codecs
 import fnmatch
 import os, os.path
+import sys
 
 def HasUnicode(InputString):
     encoding = chardet.detect(InputString.encode('utf-8'))
@@ -12,8 +13,8 @@ def HasUnicode(InputString):
         return True
         
 def TranslateLine(InputString):
-    #clean up input string for the translator
-    #white space and comment delimeters can produce wrong output
+    #Clean up input string for the translator
+    #White space and comment delimeters can produce wrong output
     LeadingWhitespace = InputString[:len(InputString)-len(InputString.lstrip())]
     InputString = InputString.lstrip().rstrip('\r\n')
     InputString = InputString.replace("/* ", '').replace(" */", '').replace("/*", '').replace("*/", '')
@@ -25,10 +26,10 @@ def TranslateLine(InputString):
     return TranslatedLine
     
 
-BasePath = 'C:/Panasonic788/src/HDMIDrv'
+BasePath = 'C:/ToTranslate'
 
 #These header files are not encoded in SJIS so they need to be skipped
-ProblemHeaderList = ["HDMIDrv_Tx_avfmt.h", "HDMIDrv_Rx_config.h"]
+ProblemHeaderList = ["bad_header_1.h", "bad_header_2.h"]
 
 SourceList = [os.path.join(dirpath, f)
     for dirpath, dirnames, files in os.walk(BasePath)
@@ -41,7 +42,7 @@ HeaderList = [os.path.join(dirpath, f)
 translator = Translator(from_lang='ja', to_lang='en')
 
 for path in SourceList:
-    print path #print path in case we encounter an error opening this file
+    print path #Print path in case we encounter an error opening this file
     newtarget = path + "_temp"
     
     with codecs.open(path, "r", "utf-8") as sourceFile:
@@ -50,7 +51,7 @@ for path in SourceList:
                 line = sourceFile.readline()
                 if not line:
                     break
-                targetFile.write(line) #write line first so that translated comment follows
+                targetFile.write(line) #Write line first so that translated comment follows
                 
                 if HasUnicode(line):
                     TranslatedLine = TranslateLine(line)
@@ -59,12 +60,13 @@ for path in SourceList:
                         sys.exit(0)
                     else:                        
                         targetFile.write(TranslatedLine)
+    #Remove old file and rename temp file
     os.remove(path)
     os.rename(newtarget, path)
 print "Completed source files" 
 
 for path in HeaderList:
-    print path #print path in case we encounter an error opening this file
+    print path #Print path in case we encounter an error opening this file
     newtarget = path + "_temp"
     
     #Get file name from full path and check if it should be skipped
@@ -78,7 +80,7 @@ for path in HeaderList:
                 line = sourceFile.readline()
                 if not line:
                     break
-                targetFile.write(line) #write line first so that translated comment follows
+                targetFile.write(line) #Write line first so that translated comment follows
                 
                 if HasUnicode(line):
                     TranslatedLine = TranslateLine(line)
@@ -87,6 +89,7 @@ for path in HeaderList:
                         sys.exit(0)
                     else:                        
                         targetFile.write(TranslatedLine)
+    #Remove old file and rename temp file
     os.remove(path)
     os.rename(newtarget, path)
 print "Completed header files"
