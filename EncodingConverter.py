@@ -8,6 +8,9 @@ BasePath = 'C:/ToConvert' # Base directory location of files to be converted
 #These header files are not encoded in SJIS so they need to be skipped
 ProblemHeaderList = ["bad_header_1.h", "bad_header_2.h"]
 
+#These source files are not encoded in SJIS so they need to be skipped
+ProblemSourceList = ["skipped_source_1.c", "skipped_source_2.c"]
+
 SourceList = [os.path.join(dirpath, f)
     for dirpath, dirnames, files in os.walk(BasePath)
     for f in fnmatch.filter(files, '*.c')]
@@ -19,6 +22,11 @@ HeaderList = [os.path.join(dirpath, f)
 for path in SourceList:
     print path #print path in case we encounter an error opening this file
     newtarget = path + "_utf"
+
+    #Get file name from full path and check if it should be skipped
+    if os.path.basename(path) in ProblemSourceList:
+        print "...skipped"
+        continue
     
     with codecs.open(path, "r", "shift_jis") as sourceFile:
         with codecs.open(newtarget, "w", "utf-8") as targetFile:
