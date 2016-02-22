@@ -28,12 +28,6 @@ def TranslateLine(InputString):
 
 BasePath = 'C:/ToTranslate'
 
-#These header files don't contain Japanese so they should be skipped
-ProblemHeaderList = ["bad_header_1.h", "bad_header_2.h"]
-
-#These source files don't contain Japanese so they should be skipped
-ProblemSourceList = ["skipped_source_1.c", "skipped_source_2.c"]
-
 SourceList = [os.path.join(dirpath, f)
     for dirpath, dirnames, files in os.walk(BasePath)
     for f in fnmatch.filter(files, '*.c')]
@@ -41,17 +35,14 @@ SourceList = [os.path.join(dirpath, f)
 HeaderList = [os.path.join(dirpath, f)
     for dirpath, dirnames, files in os.walk(BasePath)
     for f in fnmatch.filter(files, '*.h')]
+    
+TranslateList = SourceList + HeaderList;
 
 translator = Translator(from_lang='ja', to_lang='en')
 
-for path in SourceList:
-    print path #Print path in case we encounter an error opening this file
+for path in TranslateList:
+    print path # Print path in case we encounter an error opening this file
     newtarget = path + "_temp"
-
-    #Get file name from full path and check if it should be skipped
-    if os.path.basename(path) in ProblemSourceList:
-        print "...skipped"
-        continue
     
     with codecs.open(path, "r", "utf-8") as sourceFile:
         with codecs.open(newtarget, "w", "utf-8") as targetFile:
@@ -59,45 +50,16 @@ for path in SourceList:
                 line = sourceFile.readline()
                 if not line:
                     break
-                targetFile.write(line) #Write line first so that translated comment follows
+                targetFile.write(line) # Write line first so that translated comment follows
                 
                 if HasUnicode(line):
                     TranslatedLine = TranslateLine(line)
                     if "HTTP://MYMEMORY.TRANSLATED.NET/DOC/QUOTAREACHED" in TranslatedLine:
                         print "Translation quota reached! Exiting."
+                        # Exit without deleting so that the lines that were translated can be saved
                         sys.exit(0)
                     else:                        
                         targetFile.write(TranslatedLine)
-    #Remove old file and rename temp file
     os.remove(path)
     os.rename(newtarget, path)
-print "Completed source files" 
-
-for path in HeaderList:
-    print path #Print path in case we encounter an error opening this file
-    newtarget = path + "_temp"
-    
-    #Get file name from full path and check if it should be skipped
-    if os.path.basename(path) in ProblemHeaderList:
-        print "...skipped"
-        continue
-    
-    with codecs.open(path, "r", "utf-8") as sourceFile:
-        with codecs.open(newtarget, "w", "utf-8") as targetFile:
-            while True:
-                line = sourceFile.readline()
-                if not line:
-                    break
-                targetFile.write(line) #Write line first so that translated comment follows
-                
-                if HasUnicode(line):
-                    TranslatedLine = TranslateLine(line)
-                    if "HTTP://MYMEMORY.TRANSLATED.NET/DOC/QUOTAREACHED" in TranslatedLine:
-                        print "Translation quota reached! Exiting."
-                        sys.exit(0)
-                    else:                        
-                        targetFile.write(TranslatedLine)
-    #Remove old file and rename temp file
-    os.remove(path)
-    os.rename(newtarget, path)
-print "Completed header files"
+print "Completed translation" 
